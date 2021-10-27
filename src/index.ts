@@ -3,11 +3,23 @@
 import path from 'path';
 import fs from 'fs-extra';
 import image2uri from 'image2uri';
-import { SVGIcons2SVGFontOptions } from 'svgicons2svgfont';
+import {SVGIcons2SVGFontOptions} from 'svgicons2svgfont';
 import color from 'colors-cli';
-import { OptimizeOptions } from 'svgo';
-import { generateIconsSource, generateReactIcons } from './generate';
-import { createSVG, createTTF, createEOT, createWOFF, createWOFF2, createSvgSymbol, copyTemplate, CSSOptions, createHTML, createTypescript, TypescriptOptions } from './utils';
+import {OptimizeOptions} from 'svgo';
+import {generateIconsSource, generateReactIcons} from './generate';
+import {
+  createSVG,
+  createTTF,
+  createEOT,
+  createWOFF,
+  createWOFF2,
+  createSvgSymbol,
+  copyTemplate,
+  CSSOptions,
+  createHTML,
+  createTypescript,
+  TypescriptOptions
+} from './utils';
 
 export type SvgToFontOptions = {
   /**
@@ -65,8 +77,8 @@ export type SvgToFontOptions = {
    */
   classNamePrefix?: SvgToFontOptions['fontName'];
   /**
-  * Directory of custom templates.
-  */
+   * Directory of custom templates.
+   */
   styleTemplates?: string;
   /**
    * unicode start number
@@ -146,7 +158,8 @@ export type SvgToFontOptions = {
    * Create typescript file with declarations for icon classnames
    * @default false
    */
-  typescript?: boolean | TypescriptOptions
+  typescript?: boolean | TypescriptOptions,
+  selectorFormatter?: (prefix: string, iconName: string, selectorRules: string) => string
 }
 
 export default async (options: SvgToFontOptions = {}) => {
@@ -154,7 +167,7 @@ export default async (options: SvgToFontOptions = {}) => {
   if (fs.pathExistsSync(pkgPath)) {
     const pkg = require(pkgPath);
     if (pkg.svgtofont) {
-      options = { ...options, ...pkg.svgtofont }
+      options = {...options, ...pkg.svgtofont}
     }
   }
 
@@ -167,6 +180,7 @@ export default async (options: SvgToFontOptions = {}) => {
   options.svgicons2svgfont = options.svgicons2svgfont || {};
   options.svgicons2svgfont.fontName = options.fontName;
   options.classNamePrefix = options.classNamePrefix || options.fontName;
+
   const fontSize = options.css && typeof options.css !== 'boolean' && options.css.fontSize ? options.css.fontSize : '16px';
   // If you generate a font you need to generate a style.
   if (options.website && !options.css) options.css = true;
@@ -196,7 +210,13 @@ export default async (options: SvgToFontOptions = {}) => {
           <h4>${options.classNamePrefix}-${name}</h4>
         </li>
       `);
-      cssString.push(`.${options.classNamePrefix}-${name}:before { content: "\\${_code.charCodeAt(0).toString(16)}"; }\n`);
+
+      if (typeof options.selectorFormatter === 'function') {
+        cssString.push(options.selectorFormatter(options.classNamePrefix, name, ` { content: "\\${_code.charCodeAt(0).toString(16)}"; }\n`))
+      } else {
+        cssString.push(`.${options.classNamePrefix}-${name}:before { content: "\\${_code.charCodeAt(0).toString(16)}"; }\n`);
+      }
+
       cssToVars.push(`$${options.classNamePrefix}-${name}: "\\${_code.charCodeAt(0).toString(16)}";\n`);
     });
     const ttf = await createTTF(options);
@@ -213,12 +233,12 @@ export default async (options: SvgToFontOptions = {}) => {
         fontSize: fontSize,
         timestamp: new Date().getTime(),
         prefix: options.classNamePrefix || options.fontName,
-        _opts: typeof options.css === 'boolean' ? {} : { ...options.css }
+        _opts: typeof options.css === 'boolean' ? {} : {...options.css}
       });
     }
 
     if (options.typescript) {
-      await createTypescript({ ...options, typescript: options.typescript })
+      await createTypescript({...options, typescript: options.typescript})
     }
 
     if (options.website) {
