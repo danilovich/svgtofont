@@ -4,9 +4,6 @@
   "description": "Converts SVG to TTF/EOT/WOFF/WOFF2/SVG format fonts.",
   "homepage": "https://jaywcjlove.github.io/svgtofont/",
   "main": "lib/index.js",
-  "bin": {
-    "svgtofont": "lib/cli.js"
-  },
   "scripts": {
     "prepare": "npm run build",
     "start": "node lib/index.js",
