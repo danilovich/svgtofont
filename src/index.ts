@@ -314,6 +314,8 @@ export default async (options: SvgToFontOptions = {}) => {
       console.log(`${color.green('SUCCESS')} Created React Components. `);
     }
 
+    return unicodeObject;
+
   } catch (error) {
     console.log('SvgToFont:CLI:ERR:', error);
   }
